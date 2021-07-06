@@ -2,7 +2,7 @@ use crate::TIError;
 use cocoa::{
     appkit::{
         NSApp, NSApplication, NSApplicationActivateIgnoringOtherApps, NSImage, NSMenu, NSMenuItem,
-        NSRunningApplication, NSStatusBar, NSStatusItem, NSWindow,
+        NSRunningApplication, NSStatusBar, NSStatusItem, NSWindow, NSApplicationActivationPolicyAccessory,
     },
     base::{nil, YES},
     foundation::{NSAutoreleasePool, NSString},
@@ -110,6 +110,8 @@ impl TrayItemMacOS {
         unsafe {
             let app = NSApp();
             app.activateIgnoringOtherApps_(YES);
+            // start without a dock icon
+            app.setActivationPolicy_(NSApplicationActivationPolicyAccessory);
 
             let item = NSStatusBar::systemStatusBar(nil).statusItemWithLength_(-1.0);
             let title = NSString::alloc(nil).init_str(&self.name);
