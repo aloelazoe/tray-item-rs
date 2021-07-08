@@ -1,10 +1,10 @@
 use crate::TIError;
 use cocoa::{
     appkit::{
-        NSApp, NSApplication, NSApplicationActivateIgnoringOtherApps, NSImage, NSMenu, NSMenuItem,
-        NSRunningApplication, NSStatusBar, NSStatusItem, NSWindow, NSApplicationActivationPolicyAccessory,
+        NSApp, NSApplication, NSImage, NSMenu, NSMenuItem, NSStatusBar,
+        NSStatusItem, NSWindow, NSApplicationActivationPolicyAccessory,
     },
-    base::{nil, YES},
+    base::{nil},
     foundation::{NSAutoreleasePool, NSString},
 };
 use objc::{msg_send, sel, sel_impl};
@@ -117,7 +117,6 @@ impl TrayItemMacOS {
     pub fn display(&mut self) {
         unsafe {
             let app = NSApp();
-            app.activateIgnoringOtherApps_(YES);
             // start without a dock icon
             app.setActivationPolicy_(NSApplicationActivationPolicyAccessory);
 
@@ -133,9 +132,6 @@ impl TrayItemMacOS {
                 item.setTitle_(title);
             }
             item.setMenu_(self.menu);
-
-            let current_app = NSRunningApplication::currentApplication(nil);
-            current_app.activateWithOptions_(NSApplicationActivateIgnoringOtherApps);
 
             app.run();
         }
