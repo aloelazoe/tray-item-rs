@@ -73,7 +73,7 @@ impl TrayItemMacOS {
 
     pub fn add_menu_item<F>(&mut self, label: &str, cb: F) -> Result<(), TIError>
     where
-        F: Fn() -> () + Send + Sync + 'static,
+        F: FnMut() -> () + Send + Sync + 'static,
     {
         let cb_obj = Callback::from(Box::new(cb));
 

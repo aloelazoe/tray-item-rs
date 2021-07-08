@@ -20,11 +20,11 @@ unsafe impl Message for Callback {}
 // another boxed object ($cbs_name), which, since it doesn't use traits, is actually a
 // regular "thin" pointer, and store THAT pointer in the ivar.  But...so...oy.
 pub(crate) struct CallbackState {
-    cb: Box<dyn Fn() -> ()>,
+    cb: Box<dyn FnMut() -> ()>,
 }
 
 impl Callback {
-    pub(crate) fn from(cb: Box<dyn Fn() -> ()>) -> Id<Self> {
+    pub(crate) fn from(cb: Box<dyn FnMut() -> ()>) -> Id<Self> {
         let cbs = CallbackState { cb };
         let bcbs = Box::new(cbs);
 
@@ -61,7 +61,7 @@ impl INSObject for Callback {
                     let pval: usize = *this.get_ivar("_cbptr");
                     let ptr = pval as *mut c_void;
                     let ptr = ptr as *mut CallbackState;
-                    let bcbs: Box<CallbackState> = Box::from_raw(ptr);
+                    let mut bcbs: Box<CallbackState> = Box::from_raw(ptr);
                     {
                         (*bcbs.cb)();
                     }
