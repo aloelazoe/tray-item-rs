@@ -47,7 +47,9 @@ impl Callback {
 // releases it for us.  so we leak the boxed callback right now.
 
 impl INSObject for Callback {
+    // fn class() -> &'static Class {
     fn class() -> &'static Class {
+
         let cname = "Callback";
 
         let mut klass = Class::get(cname);

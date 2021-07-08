@@ -73,7 +73,7 @@ impl TrayItemMacOS {
 
     pub fn add_menu_item<F>(&mut self, label: &str, cb: F) -> Result<(), TIError>
     where
-        F: FnMut() -> () + Send + Sync + 'static,
+        F: FnMut() -> () + 'static,
     {
         let cb_obj = Callback::from(Box::new(cb));
 
@@ -110,19 +110,19 @@ impl TrayItemMacOS {
 
     /// should take the output of `cocoa::delegate` macro as an argument
     /// https://docs.rs/cocoa/0.24.0/cocoa/macro.delegate.html
-    pub unsafe fn set_app_delegate(&mut self, delegate: *mut objc::runtime::Object) {
-        self.app_delegate = Some(delegate);
-    }
+    // pub unsafe fn set_app_delegate(&mut self, delegate: *mut objc::runtime::Object) {
+    //     self.app_delegate = Some(delegate);
+    // }
 
     pub fn display(&mut self) {
         unsafe {
-            let app = NSApp();
+            // let app = NSApp();
             // start without a dock icon
-            app.setActivationPolicy_(NSApplicationActivationPolicyAccessory);
+            // app.setActivationPolicy_(NSApplicationActivationPolicyAccessory);
 
-            if let Some(delegate) = self.app_delegate {
-                app.setDelegate_(delegate);
-            }
+            // if let Some(delegate) = self.app_delegate {
+            //     app.setDelegate_(delegate);
+            // }
 
             let item = NSStatusBar::systemStatusBar(nil).statusItemWithLength_(-1.0);
             let title = NSString::alloc(nil).init_str(&self.name);
@@ -133,7 +133,7 @@ impl TrayItemMacOS {
             }
             item.setMenu_(self.menu);
 
-            app.run();
+            // app.run();
         }
     }
 }
