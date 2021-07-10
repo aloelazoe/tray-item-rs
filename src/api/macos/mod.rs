@@ -1,8 +1,8 @@
 use crate::TIError;
 use cocoa::{
     appkit::{
-        NSApp, NSApplication, NSImage, NSMenu, NSMenuItem, NSStatusBar,
-        NSStatusItem, NSWindow, NSApplicationActivationPolicyAccessory,
+        NSImage, NSMenu, NSMenuItem, NSStatusBar,
+        NSStatusItem, NSWindow,
     },
     base::{nil},
     foundation::{NSAutoreleasePool, NSString},
@@ -19,7 +19,6 @@ pub struct TrayItemMacOS {
     _pool: *mut objc::runtime::Object,
     icon: Option<*mut objc::runtime::Object>,
     main_thread: Option<JoinHandle<()>>,
-    app_delegate: Option<*mut objc::runtime::Object>,
 }
 
 impl TrayItemMacOS {
@@ -39,10 +38,7 @@ impl TrayItemMacOS {
                 icon,
                 menu: NSMenu::new(nil).autorelease(),
                 main_thread: None,
-                app_delegate: None,
             };
-
-            // t.display();
 
             Ok(t)
         }
@@ -64,6 +60,26 @@ impl TrayItemMacOS {
             let item = NSMenuItem::alloc(nil)
                 .initWithTitle_action_keyEquivalent_(itemtitle, action, no_key);
             let _: () = msg_send![item, setTitle: itemtitle];
+
+            NSMenu::addItem_(self.menu, item);
+        }
+
+        Ok(())
+    }
+
+    pub fn add_menu_item_thread_safe<F>(&mut self, label: &str, cb: F) -> Result<(), TIError>
+    where
+        F: FnMut() -> () + Send + Sync + 'static,
+    {
+        let cb_obj = Callback::from(Box::new(cb));
+
+        unsafe {
+            let no_key = NSString::alloc(nil).init_str(""); // TODO want this eventually
+            let itemtitle = NSString::alloc(nil).init_str(label);
+            let action = sel!(call);
+            let item = NSMenuItem::alloc(nil)
+                .initWithTitle_action_keyEquivalent_(itemtitle, action, no_key);
+            let _: () = msg_send![item, setTarget: cb_obj];
 
             NSMenu::addItem_(self.menu, item);
         }
@@ -108,22 +124,8 @@ impl TrayItemMacOS {
         }
     }
 
-    /// should take the output of `cocoa::delegate` macro as an argument
-    /// https://docs.rs/cocoa/0.24.0/cocoa/macro.delegate.html
-    // pub unsafe fn set_app_delegate(&mut self, delegate: *mut objc::runtime::Object) {
-    //     self.app_delegate = Some(delegate);
-    // }
-
     pub fn display(&mut self) {
         unsafe {
-            // let app = NSApp();
-            // start without a dock icon
-            // app.setActivationPolicy_(NSApplicationActivationPolicyAccessory);
-
-            // if let Some(delegate) = self.app_delegate {
-            //     app.setDelegate_(delegate);
-            // }
-
             let item = NSStatusBar::systemStatusBar(nil).statusItemWithLength_(-1.0);
             let title = NSString::alloc(nil).init_str(&self.name);
             if let Some(icon) = self.icon {
@@ -132,8 +134,6 @@ impl TrayItemMacOS {
                 item.setTitle_(title);
             }
             item.setMenu_(self.menu);
-
-            // app.run();
         }
     }
 }
